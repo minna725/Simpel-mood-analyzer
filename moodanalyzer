@@ -1,0 +1,63 @@
+import tkinter as tk
+import json
+
+class Resource:
+    def __init__(self):
+        self.mood = {
+            ("trist", "depression", "selvskade"): "Selvmordstruet",
+            ("druk", "feste", "tømmermænd", "rødvin", "øl", "spiritus"): "Alkoholiker"
+        }
+        with open('svar.json') as svarFil:
+            self.resource = json.load(svarFil)
+
+class View:
+    def __init__(self, root):
+        self.root = root
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.mood_label = tk.Label(self.root, text="Skriv hvordan du har det")
+        self.mood_label.grid(row=0, column=0)
+        self.mood_entry = tk.Entry(self.root)
+        self.mood_entry.grid(row=0, column=1, padx=10, pady=10)
+        
+        # Define button and store the button object in self.analyze_btn
+        self.analyze_btn = tk.Button(self.root, text='Analyser mit humør', bd='5')
+        self.analyze_btn.grid(row=3, column=1)
+        
+        self.svar_label = tk.Label(self.root, text="")
+        self.svar_label.grid(row=4, column=1)
+
+class Controller:
+    def __init__(self, view, resource):
+        self.view = view
+        self.resource = resource
+        # Attach analyze method to button command
+        self.view.analyze_btn.config(command=self.analyze)
+
+    def analyze(self):
+        input_text = self.view.mood_entry.get().lower().split()
+        found = False
+        for word in input_text:
+            mood_type = self.get_value(word, self.resource.mood)
+            if mood_type:
+                found = True
+                response = self.resource.resource.get(mood_type, "Ingen svar fundet.")
+                self.view.svar_label.config(text=response)
+                break
+        if not found:
+            self.view.svar_label.config(text="Jeg forstår ikke hvad du mener.")
+
+    def get_value(self, searchkey, mood_dict):
+        for keyList in mood_dict.keys():
+            if searchkey in keyList:
+                return mood_dict[keyList]
+        return None
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.geometry("600x300")
+    resource = Resource()
+    view = View(root)
+    controller = Controller(view, resource)
+    root.mainloop()
